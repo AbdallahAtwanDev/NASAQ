@@ -6,6 +6,7 @@ import LogoutButton from "./LogoutButton";
 
 export default async function Navbar() {
   const session = await getSession();
+  const user = session?.user;
 
   return (
     <nav className="bg-olive sticky top-0 z-50 shadow-md">
@@ -32,7 +33,7 @@ export default async function Navbar() {
             >
               طلب مخصص
             </Link>
-            {session?.role === "ADMIN" && (
+            {user?.role === "ADMIN" && (
               <Link
                 href="/admin"
                 className="text-mustard hover:text-mustard/80 font-arabic transition-colors"
@@ -44,10 +45,10 @@ export default async function Navbar() {
 
           <div className="flex items-center gap-4">
             <CartButton />
-            {session ? (
+            {user ? (
               <div className="flex items-center gap-3">
                 <span className="text-ivory/70 text-sm font-arabic hidden sm:inline">
-                  {session.name}
+                  {user.name}
                 </span>
                 <LogoutButton />
               </div>

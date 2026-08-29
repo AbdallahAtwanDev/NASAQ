@@ -5,7 +5,7 @@ import GridPattern from "@/components/GridPattern";
 
 export default async function CustomOrderPage() {
   const session = await getSession();
-  if (!session) redirect("/login?redirect=/custom-order");
+  if (!session?.user) redirect("/login?redirect=/custom-order");
 
   return (
     <div className="bg-burgundy relative overflow-hidden">

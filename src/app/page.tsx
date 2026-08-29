@@ -5,15 +5,24 @@ import GridPattern from "@/components/GridPattern";
 import ProductCard from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/constants";
 import { getFeaturedProducts, getCraftSupplies } from "@/data/products";
+import { getAllSettings } from "@/lib/settings";
+import { getActiveCategories } from "@/actions/admin-categories";
+import { getActivePromotions } from "@/actions/admin-promotions";
 
 export default async function HomePage() {
   let featured: Awaited<ReturnType<typeof getFeaturedProducts>> = [];
   let craftSupplies: Awaited<ReturnType<typeof getCraftSupplies>> = [];
+  let settings: Record<string, string> = {};
+  let categories: Awaited<ReturnType<typeof getActiveCategories>> = [];
+  let promotions: Awaited<ReturnType<typeof getActivePromotions>> = [];
 
   try {
-    [featured, craftSupplies] = await Promise.all([
+    [featured, craftSupplies, settings, categories, promotions] = await Promise.all([
       getFeaturedProducts(),
       getCraftSupplies(),
+      getAllSettings(),
+      getActiveCategories(),
+      getActivePromotions(),
     ]);
   } catch (error) {
     console.error("Homepage data fetch failed:", error);
@@ -29,13 +38,11 @@ export default async function HomePage() {
               Handmade with Love
             </p>
             <h1 className="text-4xl md:text-6xl font-arabic font-bold text-olive leading-tight">
-              إبداعات يدوية
-              <br />
-              <span className="text-burgundy">بنَسَق فريد</span>
+              {settings.hero_title || "إبداعات يدوية بنَسَق فريد"}
             </h1>
             <p className="mt-6 text-charcoal/70 font-arabic text-lg leading-relaxed">
-              اكتشف قطعاً فريدة صنعها حرفيون مصريون، أو اطلب قطعة مخصصة تنفّذ
-              فكرتك بأيدٍ ماهرة.
+              {settings.hero_subtitle ||
+                "اكتشف قطعاً فريدة صنعها حرفيون مصريون، أو اطلب قطعة مخصصة"}
             </p>
             <div className="mt-8 flex gap-4">
               <Link href="/products" className="btn-primary">
@@ -55,10 +62,10 @@ export default async function HomePage() {
           Our Creations
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {CATEGORIES.map((cat) => (
+          {(categories.length > 0 ? categories : CATEGORIES.map(c => ({ id: c.slug, slug: c.slug, labelAr: c.labelAr }))).map((cat) => (
             <Link
-              key={cat.slug}
-              href={`/products?subCategory=${cat.slug}`}
+              key={cat.id || cat.slug}
+              href={`/products?categoryId=${cat.id || ""}&subCategory=${cat.slug}`}
               className="card p-6 text-center hover:border-mustard/30 transition-colors group"
             >
               <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-olive/5 flex items-center justify-center group-hover:bg-mustard/10 transition-colors">
@@ -112,6 +119,22 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      {promotions.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {promotions.map((promo) => (
+              <div key={promo.id} className="card p-6 bg-mustard/10 border-mustard/20">
+                <h3 className="font-arabic font-bold text-olive">{promo.title}</h3>
+                {promo.description && <p className="text-sm font-arabic text-charcoal/60 mt-1">{promo.description}</p>}
+                {promo.discountPercent && (
+                  <span className="badge-mustard mt-2">خصم {promo.discountPercent}%</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {craftSupplies.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

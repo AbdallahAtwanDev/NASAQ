@@ -88,8 +88,47 @@ async function main() {
     },
   ];
 
-  for (const product of products) {
-    await prisma.product.create({ data: product });
+  const productCount = await prisma.product.count();
+  if (productCount === 0) {
+    for (const product of products) {
+      await prisma.product.create({
+        data: { ...product, isPublished: true, isFeatured: true },
+      });
+    }
+  }
+
+  const categories = [
+    { slug: "Bags", labelAr: "حقائب", labelEn: "Bags", sortOrder: 1 },
+    { slug: "Home", labelAr: "ديكور منزلي", labelEn: "Home", sortOrder: 2 },
+    { slug: "Wearable", labelAr: "ملابس", labelEn: "Wearable", sortOrder: 3 },
+    { slug: "Accessories", labelAr: "إكسسوارات", labelEn: "Accessories", sortOrder: 4 },
+    { slug: "Jewelry", labelAr: "مجوهرات يدوية", labelEn: "Jewelry", sortOrder: 5 },
+    { slug: "Yarn", labelAr: "خيوط وأدوات", labelEn: "Craft Supplies", sortOrder: 6 },
+  ];
+
+  for (const cat of categories) {
+    await prisma.category.upsert({
+      where: { slug: cat.slug },
+      update: {},
+      create: cat,
+    });
+  }
+
+  const settings = [
+    { key: "vodafone_cash", value: "01033706441" },
+    { key: "instapay_handle", value: "atwan@instaPay" },
+    { key: "contact_phone", value: "01033706441" },
+    { key: "contact_email", value: "info@nasaq.eg" },
+    { key: "hero_title", value: "إبداعات يدوية بنَسَق فريد" },
+    { key: "hero_subtitle", value: "اكتشف قطعاً فريدة صنعها حرفيون مصريون" },
+  ];
+
+  for (const s of settings) {
+    await prisma.siteSetting.upsert({
+      where: { key: s.key },
+      update: { value: s.value },
+      create: s,
+    });
   }
 
   const shippingRates = [

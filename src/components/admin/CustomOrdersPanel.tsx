@@ -15,7 +15,7 @@ interface CustomOrderItem {
   quotedPrice: number | null;
   adminNotes: string | null;
   createdAt: Date;
-  customer: { name: string; email: string; phone: string };
+  customer: { name: string; email: string; phone: string | null };
 }
 
 const STATUS_LABELS: Record<string, string> = {

@@ -1,12 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { PaymentStatus, OrderStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export async function getPendingOrders() {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
   return prisma.order.findMany({
     where: { paymentStatus: "PENDING" },
     include: {
@@ -18,7 +18,7 @@ export async function getPendingOrders() {
 }
 
 export async function getAllOrders() {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
   return prisma.order.findMany({
     include: {
       customer: { select: { name: true, email: true } },
@@ -33,7 +33,7 @@ export async function verifyPaymentAction(
   action: "approve" | "reject",
   rejectionReason?: string
 ) {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -74,7 +74,7 @@ export async function updateOrderStatusAction(
   orderId: string,
   status: OrderStatus
 ) {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
 
   await prisma.order.update({
     where: { id: orderId },
@@ -86,12 +86,12 @@ export async function updateOrderStatusAction(
 }
 
 export async function getShippingRatesAdmin() {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
   return prisma.shippingRate.findMany({ orderBy: { governorate: "asc" } });
 }
 
 export async function upsertShippingRate(governorate: string, cost: number) {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
 
   await prisma.shippingRate.upsert({
     where: { governorate },
@@ -104,14 +104,14 @@ export async function upsertShippingRate(governorate: string, cost: number) {
 }
 
 export async function deleteShippingRate(id: string) {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
   await prisma.shippingRate.delete({ where: { id } });
   revalidatePath("/admin");
   return { success: true };
 }
 
 export async function getCustomOrders() {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
   return prisma.customOrder.findMany({
     include: { customer: { select: { name: true, email: true, phone: true } } },
     orderBy: { createdAt: "desc" },
@@ -122,7 +122,7 @@ export async function updateCustomOrderAction(
   id: string,
   data: { status?: string; quotedPrice?: number; adminNotes?: string }
 ) {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
 
   await prisma.customOrder.update({
     where: { id },
@@ -134,7 +134,7 @@ export async function updateCustomOrderAction(
 }
 
 export async function getAdminStats() {
-  await requireAuth(["ADMIN"]);
+  await requireAdmin();
 
   const [pendingPayments, totalOrders, totalProducts, customOrders] =
     await Promise.all([

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { getShippingRate } from "@/actions/checkout";
+import { getPublicSettings } from "@/actions/settings";
 import { EGYPTIAN_GOVERNORATES, formatEGP } from "@/lib/constants";
 import Image from "next/image";
 
@@ -29,6 +30,22 @@ export default function CheckoutPage() {
     hasGift: false,
     receipt: null as File | null,
   });
+
+  const [paymentSettings, setPaymentSettings] = useState({
+    vodafone: "01033706441",
+    instapay: "atwan@instaPay",
+    qrUrl: "",
+  });
+
+  useEffect(() => {
+    getPublicSettings().then((s) => {
+      setPaymentSettings({
+        vodafone: s.vodafone_cash || "01033706441",
+        instapay: s.instapay_handle || "atwan@instaPay",
+        qrUrl: s.instapay_qr_url || "",
+      });
+    });
+  }, []);
 
   useEffect(() => {
     getShippingRate(form.governorate).then(setShippingCost);
@@ -250,7 +267,7 @@ export default function CheckoutPage() {
                 <div>
                   <p className="font-medium">فودافون كاش</p>
                   <p className="text-sm text-charcoal/50 font-ui">
-                    {process.env.NEXT_PUBLIC_VODAFONE_CASH_NUMBER || "01000000000"}
+                    {paymentSettings.vodafone}
                   </p>
                 </div>
               </label>
@@ -266,8 +283,13 @@ export default function CheckoutPage() {
                 <div>
                   <p className="font-medium">إنستاباي</p>
                   <p className="text-sm text-charcoal/50 font-ui">
-                    {process.env.NEXT_PUBLIC_INSTAPAY_HANDLE || "@nasaq"}
+                    {paymentSettings.instapay}
                   </p>
+                  {paymentSettings.qrUrl && (
+                    <div className="relative w-32 h-32 mt-2 rounded overflow-hidden border border-brown/15">
+                      <Image src={paymentSettings.qrUrl} alt="QR InstaPay" fill className="object-contain" />
+                    </div>
+                  )}
                 </div>
               </label>
             </div>

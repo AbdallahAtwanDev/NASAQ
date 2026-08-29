@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Tajawal, Cormorant_Garamond, Montserrat } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import SplashScreen from "@/components/SplashScreen";
 import { CartProvider } from "@/lib/cart-context";
+import Providers from "@/components/Providers";
+import SiteChrome from "@/components/SiteChrome";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -43,12 +42,11 @@ export default function RootLayout({
       <body
         className={`${tajawal.variable} ${cormorant.variable} ${montserrat.variable} min-h-screen flex flex-col`}
       >
-        <CartProvider>
-          <SplashScreen />
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </CartProvider>
+        <Providers>
+          <CartProvider>
+            <SiteChrome>{children}</SiteChrome>
+          </CartProvider>
+        </Providers>
       </body>
     </html>
   );
