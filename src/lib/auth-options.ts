@@ -27,61 +27,69 @@ providers.push(
       password: { label: "Password", type: "password" },
     },
     async authorize(credentials) {
-      if (!credentials?.email || !credentials?.password) return null;
+      try {
+        if (!credentials?.email || !credentials?.password) return null;
 
-      const adminEmail = process.env.ADMIN_EMAIL ?? "admin@nasaq.eg";
-      const adminPassword = process.env.ADMIN_PASSWORD ?? "admin123";
+        const email = credentials.email.trim().toLowerCase();
+        const password = credentials.password;
 
-      if (
-        credentials.email === adminEmail &&
-        credentials.password === adminPassword
-      ) {
-        let admin = await prisma.user.findUnique({
-          where: { email: adminEmail },
-        });
+        const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@nasaq.eg")
+          .trim()
+          .toLowerCase();
+        const adminPassword = process.env.ADMIN_PASSWORD ?? "admin123";
 
-        if (!admin) {
-          admin = await prisma.user.create({
-            data: {
-              name: "مدير نسق",
-              email: adminEmail,
-              role: "ADMIN",
-              passwordHash: await bcrypt.hash(adminPassword, 12),
-            },
-          });
-        } else if (admin.role !== "ADMIN") {
-          admin = await prisma.user.update({
-            where: { id: admin.id },
-            data: { role: "ADMIN" },
-          });
+        let user = await prisma.user.findUnique({ where: { email } });
+
+        // Admin login
+        if (email === adminEmail) {
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                name: "مدير نسق",
+                email: adminEmail,
+                role: "ADMIN",
+                passwordHash: await bcrypt.hash(adminPassword, 12),
+              },
+            });
+          } else if (user.role !== "ADMIN") {
+            user = await prisma.user.update({
+              where: { id: user.id },
+              data: { role: "ADMIN" },
+            });
+          }
+
+          const envMatch = password === adminPassword;
+          const hashMatch = user.passwordHash
+            ? await bcrypt.compare(password, user.passwordHash)
+            : false;
+
+          if (envMatch || hashMatch) {
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: "ADMIN" as Role,
+            };
+          }
+          return null;
         }
 
+        // Regular user login
+        if (!user?.passwordHash) return null;
+
+        const valid = await bcrypt.compare(password, user.passwordHash);
+        if (!valid) return null;
+
         return {
-          id: admin.id,
-          email: admin.email,
-          name: admin.name,
-          role: "ADMIN" as Role,
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
         };
+      } catch (error) {
+        console.error("Auth authorize error:", error);
+        return null;
       }
-
-      const user = await prisma.user.findUnique({
-        where: { email: credentials.email },
-      });
-
-      if (!user?.passwordHash) return null;
-
-      const valid = await bcrypt.compare(
-        credentials.password,
-        user.passwordHash
-      );
-      if (!valid) return null;
-
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      };
     },
   })
 );
@@ -95,20 +103,22 @@ export const authOptions: NextAuthOptions = {
   providers,
   callbacks: {
     async signIn({ user, account }) {
-      const adminEmail = process.env.ADMIN_EMAIL ?? "admin@nasaq.eg";
+      const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@nasaq.eg")
+        .trim()
+        .toLowerCase();
       if (account?.provider !== "credentials" && user.email === adminEmail) {
         return false;
       }
 
       if (account?.provider === "google" && user.email) {
         const existing = await prisma.user.findUnique({
-          where: { email: user.email },
+          where: { email: user.email.toLowerCase() },
         });
         if (!existing) {
           await prisma.user.create({
             data: {
               name: user.name ?? "مستخدم",
-              email: user.email,
+              email: user.email.toLowerCase(),
               image: user.image,
               role: "CUSTOMER",
             },
@@ -121,7 +131,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account, trigger, session }) {
       if (user?.email) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: user.email },
+          where: { email: user.email.toLowerCase() },
         });
         if (dbUser) {
           token.id = dbUser.id;
@@ -134,7 +144,7 @@ export const authOptions: NextAuthOptions = {
 
       if (account && !token.role) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: token.email! },
+          where: { email: (token.email as string).toLowerCase() },
         });
         if (dbUser) {
           token.id = dbUser.id;

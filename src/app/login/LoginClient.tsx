@@ -30,7 +30,12 @@ export default function LoginClient() {
     });
 
     if (result?.error) {
-      setError("بيانات الدخول غير صحيحة");
+      console.error("Login error:", result.error);
+      setError(
+        result.error === "Configuration"
+          ? "خطأ في إعدادات السيرفر — تأكد من NEXTAUTH_SECRET على Vercel"
+          : "بيانات الدخول غير صحيحة — جرّب: admin@nasaq.eg / admin123"
+      );
       setLoading(false);
       return;
     }
