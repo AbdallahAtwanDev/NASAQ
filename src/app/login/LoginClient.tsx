@@ -9,13 +9,10 @@ import { registerAction } from "@/actions/auth";
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<"login" | "register" | "verify">("login");
+  const isAdmin = searchParams.get("admin") === "1";
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [phoneCode, setPhoneCode] = useState("");
-  const [emailNotice, setEmailNotice] = useState("");
-  const [emailSent, setEmailSent] = useState(true);
 
   const redirect = searchParams.get("redirect") || "/";
 
@@ -25,31 +22,27 @@ export default function LoginClient() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    const result = await signIn(
+      "credentials",
+      isAdmin
+        ? { email: formData.get("email") as string, password, redirect: false }
+        : { phone: formData.get("phone") as string, password, redirect: false }
+    );
 
     if (result?.error) {
-      if (result.error === "EMAIL_NOT_VERIFIED") {
-        setPendingEmail(email);
-        setMode("verify");
-        setError("يرجى تأكيد بريدك الإلكتروني أولاً");
-      } else if (result.error === "PHONE_NOT_VERIFIED") {
-        setPendingEmail(email);
-        router.push(`/verify-phone?email=${encodeURIComponent(email)}`);
+      if (result.error === "PHONE_NOT_VERIFIED") {
+        const phone = formData.get("phone") as string;
+        router.push(`/verify-phone?phone=${encodeURIComponent(phone)}`);
       } else {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        setError(isAdmin ? "بيانات الدخول غير صحيحة" : "رقم الهاتف أو كلمة المرور غير صحيحة");
       }
       setLoading(false);
       return;
     }
 
-    router.push(redirect);
+    router.push(isAdmin ? "/admin" : redirect);
     router.refresh();
   }
 
@@ -67,28 +60,22 @@ export default function LoginClient() {
       return;
     }
 
-    setPendingEmail((formData.get("email") as string).toLowerCase());
-    if (result.phoneCode) setPhoneCode(result.phoneCode);
-    else setPhoneCode("");
-    if (result.emailNotice) setEmailNotice(result.emailNotice);
-    else setEmailNotice("");
-    setEmailSent(result.emailSent !== false);
-    setMode("verify");
-    setLoading(false);
+    router.push(`/verify-phone?phone=${encodeURIComponent(result.phone!)}`);
   }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <h1 className="text-4xl font-arabic font-bold text-olive">نَسَق</h1>
           </Link>
           <p className="text-charcoal/50 font-arabic text-sm mt-2">
-            {mode === "login" && "مرحباً بعودتك"}
-            {mode === "register" && "انضم إلى عائلة نَسَق"}
-            {mode === "verify" && "تأكيد حسابك"}
+            {isAdmin
+              ? "دخول الإدارة"
+              : mode === "login"
+                ? "مرحباً بعودتك"
+                : "إنشاء حساب جديد"}
           </p>
         </div>
 
@@ -99,140 +86,70 @@ export default function LoginClient() {
             </div>
           )}
 
-          {mode === "verify" && (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-mustard/15 flex items-center justify-center">
-                <span className="text-2xl">✉</span>
-              </div>
-              <h2 className="font-arabic font-bold text-olive text-lg">
-                تحقق من بريدك الإلكتروني
-              </h2>
-              <p className="font-arabic text-sm text-charcoal/60 leading-relaxed">
-                {emailSent
-                  ? "أرسلنا رابط تأكيد وكود الهاتف إلى بريدك. بعد تأكيد البريد، أدخل كود الهاتف."
-                  : "تحقق من بريدك إن وصل — وإلا استخدم الكود أدناه."}
-              </p>
-              {emailNotice && (
-                <p className="font-arabic text-xs text-burgundy bg-burgundy/5 border border-burgundy/15 rounded p-3">
-                  {emailNotice}
-                </p>
-              )}
-              {phoneCode && (
-                <div className="p-4 bg-mustard/10 border border-mustard/20 rounded">
-                  <p className="font-arabic text-xs text-charcoal/60 mb-1">كود تأكيد الهاتف:</p>
-                  <p className="text-2xl font-mono font-bold text-mustard tracking-widest" dir="ltr">
-                    {phoneCode}
-                  </p>
-                </div>
-              )}
-              <Link
-                href={`/verify-phone?email=${encodeURIComponent(pendingEmail)}`}
-                className="btn-primary block text-center"
-              >
-                إدخال كود الهاتف
-              </Link>
-              <button
-                type="button"
-                onClick={() => { setMode("login"); setError(""); }}
-                className="text-sm text-mustard font-arabic hover:underline cursor-pointer"
-              >
-                العودة لتسجيل الدخول
-              </button>
+          {searchParams.get("verified") === "1" && (
+            <div className="p-3 mb-5 bg-mustard/15 rounded text-mustard font-arabic text-sm text-center">
+              تم تأكيد حسابك — يمكنك تسجيل الدخول
             </div>
           )}
 
-          {mode === "login" && (
-            <>
-              {process.env.NEXT_PUBLIC_GOOGLE_ENABLED === "true" && (
-                <div className="mb-6">
-                  <button
-                    type="button"
-                    onClick={() => signIn("google", { callbackUrl: redirect })}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-brown/15 rounded font-arabic text-sm hover:bg-olive/5 transition-colors cursor-pointer"
-                  >
-                    الدخول بحساب Google
-                  </button>
-                  <div className="flex items-center gap-3 my-5">
-                    <div className="flex-1 border-t border-brown/15" />
-                    <span className="text-charcoal/40 text-xs font-arabic">أو</span>
-                    <div className="flex-1 border-t border-brown/15" />
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <label className="block font-arabic text-sm text-olive mb-1.5">
-                    البريد الإلكتروني
-                  </label>
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    className="input-field"
-                    placeholder="example@email.com"
-                  />
-                </div>
-                <div>
-                  <label className="block font-arabic text-sm text-olive mb-1.5">
-                    كلمة المرور
-                  </label>
-                  <input
-                    name="password"
-                    type="password"
-                    required
-                    autoComplete="current-password"
-                    className="input-field"
-                    placeholder="••••••••"
-                  />
-                </div>
-                <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
-                  {loading ? "جاري الدخول..." : "تسجيل الدخول"}
-                </button>
-              </form>
-            </>
-          )}
-
-          {mode === "register" && (
-            <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={mode === "login" ? handleLogin : handleRegister} className="space-y-4">
+            {mode === "register" && (
               <div>
-                <label className="block font-arabic text-sm text-olive mb-1.5">الاسم الكامل</label>
+                <label className="block font-arabic text-sm text-olive mb-1.5">الاسم</label>
                 <input name="name" type="text" required className="input-field" placeholder="اسمك" />
               </div>
+            )}
+
+            {isAdmin ? (
+              <div>
+                <label className="block font-arabic text-sm text-olive mb-1.5">البريد الإلكتروني</label>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  className="input-field"
+                  placeholder="admin@nasaq.eg"
+                />
+              </div>
+            ) : (
               <div>
                 <label className="block font-arabic text-sm text-olive mb-1.5">رقم الهاتف</label>
                 <input
                   name="phone"
                   type="tel"
                   required
+                  autoComplete="tel"
                   className="input-field"
                   placeholder="01012345678"
                   dir="ltr"
                 />
               </div>
-              <div>
-                <label className="block font-arabic text-sm text-olive mb-1.5">البريد الإلكتروني</label>
-                <input name="email" type="email" required className="input-field" placeholder="example@email.com" />
-              </div>
-              <div>
-                <label className="block font-arabic text-sm text-olive mb-1.5">كلمة المرور</label>
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  className="input-field"
-                  placeholder="6 أحرف على الأقل"
-                />
-              </div>
-              <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
-                {loading ? "جاري الإنشاء..." : "إنشاء حساب"}
-              </button>
-            </form>
-          )}
+            )}
 
-          {mode !== "verify" && (
+            <div>
+              <label className="block font-arabic text-sm text-olive mb-1.5">كلمة المرور</label>
+              <input
+                name="password"
+                type="password"
+                required
+                minLength={6}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                className="input-field"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+              {loading
+                ? "جاري..."
+                : mode === "login"
+                  ? "تسجيل الدخول"
+                  : "إنشاء حساب"}
+            </button>
+          </form>
+
+          {!isAdmin && (
             <p className="text-center mt-6 font-arabic text-sm text-charcoal/50">
               {mode === "login" ? "ليس لديك حساب؟" : "لديك حساب؟"}{" "}
               <button
@@ -244,6 +161,15 @@ export default function LoginClient() {
               </button>
             </p>
           )}
+
+          <p className="text-center mt-4">
+            <Link
+              href={isAdmin ? "/login" : "/login?admin=1"}
+              className="text-xs text-charcoal/40 font-arabic hover:text-mustard"
+            >
+              {isAdmin ? "دخول العملاء" : "دخول الإدارة"}
+            </Link>
+          </p>
         </div>
       </div>
     </div>

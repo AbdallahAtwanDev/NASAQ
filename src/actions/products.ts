@@ -39,7 +39,12 @@ export async function submitCustomOrderAction(formData: FormData) {
   const adminEmail = await getSetting(SETTING_KEYS.ADMIN_NOTIFICATION_EMAIL);
   const customer = await prisma.user.findUnique({ where: { id: session.id } });
   if (adminEmail && customer) {
-    await notifyAdminNewCustomOrder(adminEmail, customer.name, description);
+    await notifyAdminNewCustomOrder(
+      adminEmail,
+      customer.name,
+      customer.phone,
+      description
+    );
   }
 
   revalidatePath("/admin");
