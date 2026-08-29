@@ -1,28 +1,20 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import FacebookProvider from "next-auth/providers/facebook";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@prisma/client";
 
 const providers: NextAuthOptions["providers"] = [];
 
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+const googleId = process.env.GOOGLE_CLIENT_ID?.trim();
+const googleSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+
+if (googleId && googleSecret && googleId.length > 5) {
   providers.push(
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    })
-  );
-}
-
-if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
-  providers.push(
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+      clientId: googleId,
+      clientSecret: googleSecret,
     })
   );
 }
@@ -95,12 +87,11 @@ providers.push(
 );
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET,
   providers,
   callbacks: {
     async signIn({ user, account }) {
@@ -108,15 +99,47 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider !== "credentials" && user.email === adminEmail) {
         return false;
       }
+
+      if (account?.provider === "google" && user.email) {
+        const existing = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+        if (!existing) {
+          await prisma.user.create({
+            data: {
+              name: user.name ?? "مستخدم",
+              email: user.email,
+              image: user.image,
+              role: "CUSTOMER",
+            },
+          });
+        }
+      }
+
       return true;
     },
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
+    async jwt({ token, user, account, trigger, session }) {
+      if (user?.email) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! },
+          where: { email: user.email },
         });
-        token.id = dbUser?.id ?? user.id;
-        token.role = dbUser?.role ?? "CUSTOMER";
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        } else if (user.id) {
+          token.id = user.id;
+          token.role = (user as { role?: Role }).role ?? "CUSTOMER";
+        }
+      }
+
+      if (account && !token.role) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email! },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
       }
 
       if (trigger === "update" && session?.user) {

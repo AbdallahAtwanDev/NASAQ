@@ -90,11 +90,7 @@ async function main() {
 
   const productCount = await prisma.product.count();
   if (productCount === 0) {
-    for (const product of products) {
-      await prisma.product.create({
-        data: { ...product, isPublished: true, isFeatured: true },
-      });
-    }
+    console.log("No demo products seeded — add products from /admin/products");
   }
 
   const categories = [
