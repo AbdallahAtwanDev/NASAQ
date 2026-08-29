@@ -77,10 +77,6 @@ export const authOptions: NextAuthOptions = {
           const valid = await bcrypt.compare(password, user.passwordHash);
           if (!valid) return null;
 
-          if (!user.phoneVerified) {
-            throw new Error("PHONE_NOT_VERIFIED");
-          }
-
           return {
             id: user.id,
             email: user.email,
@@ -88,9 +84,6 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
           };
         } catch (error) {
-          if (error instanceof Error && error.message === "PHONE_NOT_VERIFIED") {
-            throw error;
-          }
           console.error("Auth authorize error:", error);
           return null;
         }
