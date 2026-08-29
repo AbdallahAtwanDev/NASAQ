@@ -13,7 +13,9 @@ export default function LoginClient() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
-  const [devPhoneCode, setDevPhoneCode] = useState("");
+  const [phoneCode, setPhoneCode] = useState("");
+  const [emailNotice, setEmailNotice] = useState("");
+  const [emailSent, setEmailSent] = useState(true);
 
   const redirect = searchParams.get("redirect") || "/";
 
@@ -66,7 +68,11 @@ export default function LoginClient() {
     }
 
     setPendingEmail((formData.get("email") as string).toLowerCase());
-    if (result.devPhoneCode) setDevPhoneCode(result.devPhoneCode);
+    if (result.phoneCode) setPhoneCode(result.phoneCode);
+    else setPhoneCode("");
+    if (result.emailNotice) setEmailNotice(result.emailNotice);
+    else setEmailNotice("");
+    setEmailSent(result.emailSent !== false);
     setMode("verify");
     setLoading(false);
   }
@@ -102,17 +108,20 @@ export default function LoginClient() {
                 تحقق من بريدك الإلكتروني
               </h2>
               <p className="font-arabic text-sm text-charcoal/60 leading-relaxed">
-                أرسلنا رابط تأكيد وكود الهاتف إلى بريدك.
-                <br />
-                بعد تأكيد البريد، أدخل كود الهاتف.
+                {emailSent
+                  ? "أرسلنا رابط تأكيد وكود الهاتف إلى بريدك. بعد تأكيد البريد، أدخل كود الهاتف."
+                  : "تحقق من بريدك إن وصل — وإلا استخدم الكود أدناه."}
               </p>
-              {devPhoneCode && (
+              {emailNotice && (
+                <p className="font-arabic text-xs text-burgundy bg-burgundy/5 border border-burgundy/15 rounded p-3">
+                  {emailNotice}
+                </p>
+              )}
+              {phoneCode && (
                 <div className="p-4 bg-mustard/10 border border-mustard/20 rounded">
-                  <p className="font-arabic text-xs text-charcoal/60 mb-1">
-                    كود الهاتف (يظهر لأن إرسال الإيميل غير مفعّل):
-                  </p>
+                  <p className="font-arabic text-xs text-charcoal/60 mb-1">كود تأكيد الهاتف:</p>
                   <p className="text-2xl font-mono font-bold text-mustard tracking-widest" dir="ltr">
-                    {devPhoneCode}
+                    {phoneCode}
                   </p>
                 </div>
               )}

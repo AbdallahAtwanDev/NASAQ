@@ -3,14 +3,24 @@ import { randomBytes } from "crypto";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-export async function sendEmail(to: string, subject: string, html: string) {
-  const apiKey = process.env.RESEND_API_KEY;
+export type EmailResult = {
+  ok: boolean;
+  dev?: boolean;
+  error?: string;
+};
+
+export async function sendEmail(
+  to: string,
+  subject: string,
+  html: string
+): Promise<EmailResult> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
     console.log(`[Email] To: ${to} | Subject: ${subject}`);
-    return { ok: true, dev: true };
+    return { ok: false, dev: true, error: "RESEND_API_KEY غير مضاف" };
   }
 
-  const from = process.env.EMAIL_FROM || "NASAQ <onboarding@resend.dev>";
+  const from = process.env.EMAIL_FROM || "onboarding@resend.dev";
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -22,13 +32,31 @@ export async function sendEmail(to: string, subject: string, html: string) {
 
   if (!res.ok) {
     const err = await res.text();
-    console.error("Email send failed:", err);
-    return { ok: false };
+    console.error("Email send failed:", to, err);
+    let message = "فشل إرسال الإيميل";
+    try {
+      const parsed = JSON.parse(err) as { message?: string };
+      if (parsed.message?.includes("own email address")) {
+        message =
+          "حساب Resend يسمح حالياً بإرسال الإيميل لبريد المسجّل فقط. استخدم الكود الظاهر على الشاشة.";
+      } else if (parsed.message) {
+        message = parsed.message;
+      }
+    } catch {
+      /* ignore */
+    }
+    return { ok: false, error: message };
   }
+
   return { ok: true };
 }
 
-export async function sendVerificationEmail(email: string, name: string) {
+export async function sendRegistrationEmail(
+  email: string,
+  name: string,
+  phone: string,
+  phoneCode: string
+) {
   const token = randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -39,15 +67,18 @@ export async function sendVerificationEmail(email: string, name: string) {
 
   const link = `${APP_URL}/verify-email?token=${token}`;
   const html = `
-    <div dir="rtl" style="font-family:sans-serif;max-width:480px;margin:0 auto">
+    <div dir="rtl" style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
       <h2 style="color:#3A3F2E">مرحباً ${name} في نَسَق</h2>
-      <p>اضغط على الزر لتأكيد بريدك الإلكتروني:</p>
-      <a href="${link}" style="display:inline-block;background:#3A3F2E;color:#F2EDE2;padding:12px 24px;border-radius:4px;text-decoration:none;margin:16px 0">تأكيد البريد الإلكتروني</a>
-      <p style="color:#888;font-size:12px">الرابط صالح لمدة 24 ساعة</p>
+      <p>لإكمال التسجيل:</p>
+      <p><strong>1.</strong> اضغط لتأكيد بريدك الإلكتروني:</p>
+      <a href="${link}" style="display:inline-block;background:#3A3F2E;color:#F2EDE2;padding:12px 24px;border-radius:4px;text-decoration:none;margin:12px 0">تأكيد البريد الإلكتروني</a>
+      <p><strong>2.</strong> كود تأكيد رقم الهاتف <strong>${phone}</strong>:</p>
+      <p style="font-size:32px;font-weight:bold;color:#C69A2E;letter-spacing:8px;margin:16px 0">${phoneCode}</p>
+      <p style="color:#888;font-size:12px">الكود صالح 10 دقائق — رابط البريد صالح 24 ساعة</p>
     </div>
   `;
 
-  return sendEmail(email, "تأكيد بريدك الإلكتروني — نَسَق", html);
+  return sendEmail(email, "تأكيد حسابك — نَسَق", html);
 }
 
 export function generatePhoneCode() {
@@ -61,8 +92,8 @@ export async function sendPhoneVerificationEmail(
   code: string
 ) {
   const html = `
-    <div dir="rtl" style="font-family:sans-serif;max-width:480px;margin:0 auto">
-      <h2 style="color:#3A3F2E">تأكيد رقم الهاتف — نَسَق</h2>
+    <div dir="rtl" style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+      <h2 style="color:#3A3F2E">كود تأكيد الهاتف — نَسَق</h2>
       <p>مرحباً ${name}،</p>
       <p>كود تأكيد رقم <strong>${phone}</strong>:</p>
       <p style="font-size:32px;font-weight:bold;color:#C69A2E;letter-spacing:8px">${code}</p>

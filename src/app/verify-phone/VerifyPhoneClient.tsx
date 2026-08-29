@@ -13,7 +13,8 @@ export default function VerifyPhoneClient() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resent, setResent] = useState(false);
-  const [devCode, setDevCode] = useState("");
+  const [phoneCode, setPhoneCode] = useState("");
+  const [emailNotice, setEmailNotice] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,13 +38,15 @@ export default function VerifyPhoneClient() {
   async function handleResend() {
     if (!email) return;
     setResent(false);
-    setDevCode("");
+    setPhoneCode("");
+    setEmailNotice("");
     const result = await resendVerificationAction(email);
     if (result.error) {
       setError(result.error);
       return;
     }
-    if (result.devPhoneCode) setDevCode(result.devPhoneCode);
+    if (result.phoneCode) setPhoneCode(result.phoneCode);
+    if (result.emailNotice) setEmailNotice(result.emailNotice);
     setResent(true);
   }
 
@@ -66,14 +69,24 @@ export default function VerifyPhoneClient() {
           </div>
         )}
 
-        {resent && (
+        {emailNotice && (
+          <div className="p-3 mb-4 bg-burgundy/5 border border-burgundy/15 rounded text-burgundy font-arabic text-xs text-center">
+            {emailNotice}
+          </div>
+        )}
+
+        {phoneCode && (
+          <div className="p-4 mb-4 bg-mustard/10 border border-mustard/20 rounded text-center">
+            <p className="font-arabic text-xs text-charcoal/60 mb-1">كود تأكيد الهاتف:</p>
+            <p className="text-2xl font-mono font-bold text-mustard tracking-widest" dir="ltr">
+              {phoneCode}
+            </p>
+          </div>
+        )}
+
+        {resent && !phoneCode && (
           <div className="p-3 mb-4 bg-mustard/15 rounded text-mustard font-arabic text-sm text-center">
-            تم إرسال كود جديد
-            {devCode && (
-              <p className="mt-2 text-olive font-mono text-xl tracking-widest" dir="ltr">
-                {devCode}
-              </p>
-            )}
+            تم إرسال كود جديد إلى بريدك
           </div>
         )}
 

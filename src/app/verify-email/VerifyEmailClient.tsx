@@ -11,6 +11,8 @@ export default function VerifyEmailClient() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
 
+  const [verifiedEmail, setVerifiedEmail] = useState("");
+
   useEffect(() => {
     if (!token) {
       setStatus("error");
@@ -21,6 +23,7 @@ export default function VerifyEmailClient() {
     verifyEmailAction(token).then((result) => {
       if (result.success) {
         setStatus("success");
+        if (result.email) setVerifiedEmail(result.email);
       } else {
         setStatus("error");
         setMessage(result.error || "حدث خطأ");
@@ -45,8 +48,15 @@ export default function VerifyEmailClient() {
             <p className="font-arabic text-sm text-charcoal/60 mb-6">
               يمكنك الآن إدخال كود تأكيد الهاتف ثم تسجيل الدخول
             </p>
-            <Link href="/login" className="btn-primary inline-block">
-              تسجيل الدخول
+            <Link
+              href={
+                verifiedEmail
+                  ? `/verify-phone?email=${encodeURIComponent(verifiedEmail)}`
+                  : "/verify-phone"
+              }
+              className="btn-primary inline-block"
+            >
+              إدخال كود الهاتف
             </Link>
           </>
         )}

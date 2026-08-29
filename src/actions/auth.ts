@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import {
-  sendVerificationEmail,
+  sendRegistrationEmail,
   sendPhoneVerificationEmail,
   generatePhoneCode,
 } from "@/lib/email";
@@ -53,17 +53,17 @@ export async function registerAction(formData: FormData) {
       },
     });
 
-    const emailResult = await sendVerificationEmail(email, name);
-    await sendPhoneVerificationEmail(email, name, phone, phoneCode);
-
-    const emailConfigured = Boolean(process.env.RESEND_API_KEY);
+    const emailResult = await sendRegistrationEmail(email, name, phone, phoneCode);
 
     return {
       success: true,
       needsVerification: true,
-      devPhoneCode: !emailConfigured ? phoneCode : undefined,
+      phoneCode: emailResult.ok ? undefined : phoneCode,
       emailSent: emailResult.ok,
-      emailConfigured,
+      emailNotice: emailResult.ok
+        ? undefined
+        : emailResult.error ||
+          "لم يُرسل الإيميل — استخدم الكود الظاهر أدناه لإكمال التسجيل",
     };
   } catch (error) {
     console.error("Register error:", error);
@@ -84,7 +84,7 @@ export async function verifyEmailAction(token: string) {
     });
     await prisma.verificationToken.delete({ where: { token } });
 
-    return { success: true };
+    return { success: true, email: record.identifier };
   } catch (error) {
     console.error("Verify email error:", error);
     return { error: "حدث خطأ أثناء التأكيد. حاول مرة أخرى." };
@@ -135,27 +135,53 @@ export async function resendVerificationAction(email: string) {
     });
     if (!user) return { error: "البريد غير موجود" };
 
-    let devPhoneCode: string | undefined;
-    const emailConfigured = Boolean(process.env.RESEND_API_KEY);
+    let phoneCode: string | undefined;
+    let emailSent = true;
+    let emailNotice: string | undefined;
 
     if (!user.emailVerified) {
-      await sendVerificationEmail(user.email, user.name);
-    }
-
-    if (!user.phoneVerified && user.phone) {
-      const phoneCode = generatePhoneCode();
+      const code = generatePhoneCode();
+      const result = await sendRegistrationEmail(
+        user.email,
+        user.name,
+        user.phone || "",
+        code
+      );
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          phoneVerifyCode: phoneCode,
+          phoneVerifyCode: code,
           phoneVerifyExpires: new Date(Date.now() + 10 * 60 * 1000),
         },
       });
-      await sendPhoneVerificationEmail(user.email, user.name, user.phone, phoneCode);
-      if (!emailConfigured) devPhoneCode = phoneCode;
+      emailSent = result.ok;
+      if (!result.ok) {
+        phoneCode = code;
+        emailNotice = result.error || "لم يُرسل الإيميل — استخدم الكود أدناه";
+      }
+    } else if (!user.phoneVerified && user.phone) {
+      const code = generatePhoneCode();
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          phoneVerifyCode: code,
+          phoneVerifyExpires: new Date(Date.now() + 10 * 60 * 1000),
+        },
+      });
+      const result = await sendPhoneVerificationEmail(
+        user.email,
+        user.name,
+        user.phone,
+        code
+      );
+      emailSent = result.ok;
+      if (!result.ok) {
+        phoneCode = code;
+        emailNotice = result.error || "لم يُرسل الإيميل — استخدم الكود أدناه";
+      }
     }
 
-    return { success: true, devPhoneCode, emailConfigured };
+    return { success: true, phoneCode, emailSent, emailNotice };
   } catch (error) {
     console.error("Resend verification error:", error);
     return { error: "حدث خطأ أثناء إعادة الإرسال. حاول مرة أخرى." };
