@@ -76,6 +76,23 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
       </section>
 
       <section className="card p-6 space-y-4">
+        <h2 className="font-arabic font-bold text-olive text-lg">إشعارات الإدارة</h2>
+        <p className="font-arabic text-sm text-charcoal/50">
+          البريد الذي يستقبل إشعارات الطلبات المخصصة والتواصل
+        </p>
+        <div>
+          <label className="block font-arabic text-sm text-olive mb-1">بريد الإشعارات</label>
+          <input
+            name="admin_notification_email"
+            type="email"
+            defaultValue={settings.admin_notification_email}
+            className="input-field"
+            placeholder="admin@nasaq.eg"
+          />
+        </div>
+      </section>
+
+      <section className="card p-6 space-y-4">
         <h2 className="font-arabic font-bold text-olive text-lg">الصفحة الرئيسية</h2>
         <div>
           <label className="block font-arabic text-sm text-olive mb-1">عنوان البانر</label>

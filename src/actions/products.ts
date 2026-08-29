@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { uploadFile } from "@/lib/supabase";
+import { getSetting, SETTING_KEYS } from "@/lib/settings";
+import { notifyAdminNewCustomOrder } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 
 export async function submitCustomOrderAction(formData: FormData) {
@@ -33,6 +35,12 @@ export async function submitCustomOrderAction(formData: FormData) {
       targetDate: targetDate ? new Date(targetDate) : null,
     },
   });
+
+  const adminEmail = await getSetting(SETTING_KEYS.ADMIN_NOTIFICATION_EMAIL);
+  const customer = await prisma.user.findUnique({ where: { id: session.id } });
+  if (adminEmail && customer) {
+    await notifyAdminNewCustomOrder(adminEmail, customer.name, description);
+  }
 
   revalidatePath("/admin");
   return { success: true };

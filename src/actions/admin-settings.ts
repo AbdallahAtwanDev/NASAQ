@@ -23,6 +23,7 @@ export async function saveSettingsAction(formData: FormData) {
     instagram_url: (formData.get("instagram_url") as string) || "",
     hero_title: (formData.get("hero_title") as string) || "",
     hero_subtitle: (formData.get("hero_subtitle") as string) || "",
+    admin_notification_email: (formData.get("admin_notification_email") as string) || "",
   };
 
   const qrFile = formData.get("instapay_qr") as File | null;

@@ -11,6 +11,7 @@ export const SETTING_KEYS = {
   INSTAGRAM_URL: "instagram_url",
   HERO_TITLE: "hero_title",
   HERO_SUBTITLE: "hero_subtitle",
+  ADMIN_NOTIFICATION_EMAIL: "admin_notification_email",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -27,6 +28,7 @@ const DEFAULTS: Record<string, string> = {
   [SETTING_KEYS.HERO_TITLE]: "إبداعات يدوية بنَسَق فريد",
   [SETTING_KEYS.HERO_SUBTITLE]:
     "اكتشف قطعاً فريدة صنعها حرفيون مصريون، أو اطلب قطعة مخصصة",
+  [SETTING_KEYS.ADMIN_NOTIFICATION_EMAIL]: "info@nasaq.eg",
 };
 
 export async function getSetting(key: string): Promise<string> {

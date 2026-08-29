@@ -80,6 +80,13 @@ providers.push(
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
 
+        if (!user.emailVerified) {
+          throw new Error("EMAIL_NOT_VERIFIED");
+        }
+        if (user.phone && !user.phoneVerified) {
+          throw new Error("PHONE_NOT_VERIFIED");
+        }
+
         return {
           id: user.id,
           email: user.email,
@@ -87,6 +94,13 @@ providers.push(
           role: user.role,
         };
       } catch (error) {
+        if (
+          error instanceof Error &&
+          (error.message === "EMAIL_NOT_VERIFIED" ||
+            error.message === "PHONE_NOT_VERIFIED")
+        ) {
+          throw error;
+        }
         console.error("Auth authorize error:", error);
         return null;
       }
@@ -121,7 +135,13 @@ export const authOptions: NextAuthOptions = {
               email: user.email.toLowerCase(),
               image: user.image,
               role: "CUSTOMER",
+              emailVerified: new Date(),
             },
+          });
+        } else if (!existing.emailVerified) {
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: { emailVerified: new Date() },
           });
         }
       }

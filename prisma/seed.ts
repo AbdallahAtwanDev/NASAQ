@@ -115,6 +115,7 @@ async function main() {
     { key: "instapay_handle", value: "atwan@instaPay" },
     { key: "contact_phone", value: "01033706441" },
     { key: "contact_email", value: "info@nasaq.eg" },
+    { key: "admin_notification_email", value: "info@nasaq.eg" },
     { key: "hero_title", value: "إبداعات يدوية بنَسَق فريد" },
     { key: "hero_subtitle", value: "اكتشف قطعاً فريدة صنعها حرفيون مصريون" },
   ];
