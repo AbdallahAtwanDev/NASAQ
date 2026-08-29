@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getProductById } from "@/actions/products";
+import { getProductById } from "@/data/products";
 import { formatEGP } from "@/lib/constants";
 import AddToCartButton from "@/components/AddToCartButton";
 

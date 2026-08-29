@@ -4,13 +4,20 @@ import Link from "next/link";
 import GridPattern from "@/components/GridPattern";
 import ProductCard from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/constants";
-import { getFeaturedProducts, getCraftSupplies } from "@/actions/products";
+import { getFeaturedProducts, getCraftSupplies } from "@/data/products";
 
 export default async function HomePage() {
-  const [featured, craftSupplies] = await Promise.all([
-    getFeaturedProducts(),
-    getCraftSupplies(),
-  ]);
+  let featured: Awaited<ReturnType<typeof getFeaturedProducts>> = [];
+  let craftSupplies: Awaited<ReturnType<typeof getCraftSupplies>> = [];
+
+  try {
+    [featured, craftSupplies] = await Promise.all([
+      getFeaturedProducts(),
+      getCraftSupplies(),
+    ]);
+  } catch (error) {
+    console.error("Homepage data fetch failed:", error);
+  }
 
   return (
     <>

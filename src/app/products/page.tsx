@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
-import { getProducts } from "@/actions/products";
+import { getProducts } from "@/data/products";
 import { CATEGORIES } from "@/lib/constants";
 
 interface ProductsPageProps {
