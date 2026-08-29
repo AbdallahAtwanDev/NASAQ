@@ -31,7 +31,7 @@ export default function LoginClient() {
         : { phone: formData.get("phone") as string, password, redirect: false }
     );
 
-    if (result.error) {
+    if (result?.error) {
       setError(isAdmin ? "بيانات الدخول غير صحيحة" : "رقم الهاتف أو كلمة المرور غير صحيحة");
       setLoading(false);
       return;
