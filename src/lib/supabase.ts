@@ -1,16 +1,28 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+let adminClient: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+function getSupabaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!url) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL is not configured");
+  }
+  return url;
+}
 
-export function getSupabaseAdmin() {
-  if (!supabaseServiceKey) {
+function getServiceKey(): string {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
   }
-  return createClient(supabaseUrl, supabaseServiceKey);
+  return key;
+}
+
+export function getSupabaseAdmin(): SupabaseClient {
+  if (!adminClient) {
+    adminClient = createClient(getSupabaseUrl(), getServiceKey());
+  }
+  return adminClient;
 }
 
 export async function uploadFile(
