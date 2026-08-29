@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ivory: #f2ede2;
+  --color-olive: #3a3f2e;
+  --color-mustard: #c69a2e;
+  --color-burgundy: #5a1e2a;
+  --color-charcoal: #1f1f1f;
+  --color-brown: #3b2a22;
+  --font-arabic: var(--font-tajawal), "Tajawal", sans-serif;
+  --font-editorial: var(--font-cormorant), "Cormorant Garamond", serif;
+  --font-ui: var(--font-montserrat), "Montserrat", sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ivory text-charcoal font-arabic antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-arabic text-olive;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-olive text-ivory px-6 py-3 rounded font-arabic font-medium
+      hover:bg-olive/90 transition-all duration-200 cursor-pointer
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-mustard text-ivory px-6 py-3 rounded font-arabic font-medium
+      hover:bg-mustard/90 transition-all duration-200 cursor-pointer;
+  }
+
+  .btn-outline {
+    @apply border border-brown/15 text-olive px-6 py-3 rounded font-arabic
+      hover:bg-olive/5 transition-all duration-200 cursor-pointer;
+  }
+
+  .card {
+    @apply bg-ivory border border-brown/15 rounded overflow-hidden;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-white border border-brown/15 rounded
+      text-charcoal placeholder:text-charcoal/40 focus:outline-none
+      focus:border-olive/50 transition-colors;
+  }
+
+  .badge-mustard {
+    @apply inline-block bg-mustard/15 text-mustard text-xs px-2 py-1 rounded
+      font-arabic;
+  }
+
+  .section-title {
+    @apply text-2xl md:text-3xl font-arabic text-olive font-bold;
+  }
+
+  .grid-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233A3F2E' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.05;
+  }
+}

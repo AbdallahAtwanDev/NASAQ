@@ -1,0 +1,130 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  MAKER
+  CUSTOMER
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OrderStatus {
+  PREPARING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum ProductCategory {
+  HANDMADE
+  CRAFT_SUPPLIES
+}
+
+model User {
+  id           String         @id @default(uuid())
+  name         String
+  email        String         @unique
+  phone        String
+  passwordHash String
+  role         Role           @default(CUSTOMER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  makerProfile MakerProfile?
+  orders       Order[]
+  customOrders CustomOrder[]
+}
+
+model MakerProfile {
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandName          String
+  bio                String?
+  vodafoneCashNumber String?
+  instapayHandle     String?
+  commissionRate     Float     @default(15.0)
+  salesPreviousMonth Int       @default(0)
+  products           Product[]
+  createdAt          DateTime  @default(now())
+}
+
+model Product {
+  id            String          @id @default(uuid())
+  title         String
+  description   String
+  price         Float
+  category      ProductCategory @default(HANDMADE)
+  subCategory   String?
+  images        String[]
+  stock         Int             @default(1)
+  isUniquePiece Boolean         @default(false)
+  makerId       String?
+  maker         MakerProfile?   @relation(fields: [makerId], references: [id])
+  orderItems    OrderItem[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model ShippingRate {
+  id          String @id @default(uuid())
+  governorate String @unique
+  cost        Float
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  orderNumber     String        @unique
+  customerId      String
+  customer        User          @relation(fields: [customerId], references: [id])
+  totalAmount     Float
+  shippingCost    Float
+  governorate     String
+  shippingAddress String
+  phone           String
+  paymentMethod   String
+  receiptImageUrl String
+  paymentStatus   PaymentStatus @default(PENDING)
+  orderStatus     OrderStatus   @default(PREPARING)
+  rejectionReason String?
+  giftMessage     String?
+  paymentDeadline DateTime
+  items           OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+model CustomOrder {
+  id              String    @id @default(uuid())
+  customerId      String
+  customer        User      @relation(fields: [customerId], references: [id])
+  description     String
+  referenceImages String[]
+  estimatedBudget Float?
+  targetDate      DateTime?
+  status          String    @default("UNDER_REVIEW")
+  quotedPrice     Float?
+  adminNotes      String?
+  createdAt       DateTime  @default(now())
+}
