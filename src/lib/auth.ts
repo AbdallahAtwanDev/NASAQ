@@ -2,7 +2,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
 export async function getSession() {
-  return getServerSession(authOptions);
+  try {
+    return await getServerSession(authOptions);
+  } catch (error) {
+    console.error("Session error:", error);
+    return null;
+  }
 }
 
 export async function requireAuth(roles?: ("ADMIN" | "MAKER" | "CUSTOMER")[]) {

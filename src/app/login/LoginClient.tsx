@@ -75,27 +75,23 @@ export default function LoginClient() {
 
       {!isRegister && (
         <div className="space-y-3 mb-6">
-          <button
-            type="button"
-            onClick={() => signIn("google", { callbackUrl: redirect })}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-brown/15 rounded font-arabic text-sm hover:bg-olive/5 transition-colors cursor-pointer"
-          >
-            <span className="text-lg">G</span>
-            الدخول بحساب Google
-          </button>
-          <button
-            type="button"
-            onClick={() => signIn("facebook", { callbackUrl: redirect })}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-brown/15 rounded font-arabic text-sm hover:bg-olive/5 transition-colors cursor-pointer"
-          >
-            <span className="text-lg text-blue-600">f</span>
-            الدخول بحساب Facebook
-          </button>
-          <div className="flex items-center gap-4">
-            <div className="flex-1 border-t border-brown/15" />
-            <span className="text-charcoal/40 text-sm font-arabic">أو</span>
-            <div className="flex-1 border-t border-brown/15" />
-          </div>
+          {process.env.NEXT_PUBLIC_GOOGLE_ENABLED === "true" && (
+            <button
+              type="button"
+              onClick={() => signIn("google", { callbackUrl: redirect })}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-brown/15 rounded font-arabic text-sm hover:bg-olive/5 transition-colors cursor-pointer"
+            >
+              <span className="text-lg">G</span>
+              الدخول بحساب Google
+            </button>
+          )}
+          {process.env.NEXT_PUBLIC_GOOGLE_ENABLED === "true" && (
+            <div className="flex items-center gap-4">
+              <div className="flex-1 border-t border-brown/15" />
+              <span className="text-charcoal/40 text-sm font-arabic">أو</span>
+              <div className="flex-1 border-t border-brown/15" />
+            </div>
+          )}
         </div>
       )}
 

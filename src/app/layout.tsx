@@ -7,23 +7,26 @@ import SiteChrome from "@/components/SiteChrome";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
-  weight: ["300", "400", "500", "700"],
+  weight: ["400", "700"],
   variable: "--font-tajawal",
   display: "swap",
+  preload: true,
 });
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
   variable: "--font-cormorant",
   display: "swap",
+  preload: false,
 });
 
 const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "600"],
   variable: "--font-montserrat",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

@@ -35,12 +35,16 @@ export async function getSetting(key: string): Promise<string> {
 }
 
 export async function getAllSettings(): Promise<Record<string, string>> {
-  const settings = await prisma.siteSetting.findMany();
-  const map: Record<string, string> = { ...DEFAULTS };
-  for (const s of settings) {
-    map[s.key] = s.value;
+  try {
+    const settings = await prisma.siteSetting.findMany();
+    const map: Record<string, string> = { ...DEFAULTS };
+    for (const s of settings) {
+      map[s.key] = s.value;
+    }
+    return map;
+  } catch {
+    return { ...DEFAULTS };
   }
-  return map;
 }
 
 export async function upsertSetting(key: string, value: string, labelAr?: string) {

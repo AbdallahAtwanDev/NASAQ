@@ -2,8 +2,19 @@ import Link from "next/link";
 import GridPattern from "./GridPattern";
 import { getAllSettings } from "@/lib/settings";
 
+const FALLBACK_SETTINGS: Record<string, string> = {
+  vodafone_cash: "01033706441",
+  instapay_handle: "atwan@instaPay",
+  contact_email: "info@nasaq.eg",
+};
+
 export default async function Footer() {
-  const settings = await getAllSettings();
+  let settings = FALLBACK_SETTINGS;
+  try {
+    settings = await getAllSettings();
+  } catch (error) {
+    console.error("Footer settings error:", error);
+  }
 
   return (
     <footer className="bg-olive text-ivory relative overflow-hidden mt-20">

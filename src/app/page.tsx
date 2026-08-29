@@ -6,8 +6,8 @@ import ProductCard from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/constants";
 import { getFeaturedProducts, getCraftSupplies } from "@/data/products";
 import { getAllSettings } from "@/lib/settings";
-import { getActiveCategories } from "@/actions/admin-categories";
-import { getActivePromotions } from "@/actions/admin-promotions";
+import { getActiveCategories } from "@/data/categories";
+import { getActivePromotions } from "@/data/promotions";
 
 export default async function HomePage() {
   let featured: Awaited<ReturnType<typeof getFeaturedProducts>> = [];

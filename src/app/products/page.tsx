@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import { getProducts } from "@/data/products";
-import { getActiveCategories } from "@/actions/admin-categories";
+import { getActiveCategories } from "@/data/categories";
 import { CATEGORIES } from "@/lib/constants";
 
 interface ProductsPageProps {
