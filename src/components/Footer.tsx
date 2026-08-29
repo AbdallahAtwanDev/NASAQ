@@ -2,19 +2,52 @@ import Link from "next/link";
 import GridPattern from "./GridPattern";
 import { getAllSettings } from "@/lib/settings";
 
-const FALLBACK_SETTINGS: Record<string, string> = {
-  vodafone_cash: "01033706441",
-  instapay_handle: "atwan@instaPay",
-  contact_email: "info@nasaq.eg",
-};
+function phoneHref(phone: string) {
+  return `tel:${phone.replace(/\s/g, "")}`;
+}
+
+function whatsappHref(value: string) {
+  if (value.startsWith("http")) return value;
+  const digits = value.replace(/\D/g, "");
+  const intl = digits.startsWith("20") ? digits : `20${digits.replace(/^0/, "")}`;
+  return `https://wa.me/${intl}`;
+}
+
+function externalHref(url: string) {
+  if (url.startsWith("http")) return url;
+  return `https://${url}`;
+}
 
 export default async function Footer() {
-  let settings = FALLBACK_SETTINGS;
+  let settings: Record<string, string> = {};
   try {
     settings = await getAllSettings();
   } catch (error) {
     console.error("Footer settings error:", error);
   }
+
+  const contacts = [
+    settings.contact_phone && {
+      label: settings.contact_phone,
+      href: phoneHref(settings.contact_phone),
+      external: false,
+    },
+    settings.contact_whatsapp && {
+      label: "واتساب",
+      href: whatsappHref(settings.contact_whatsapp),
+      external: true,
+    },
+    settings.facebook_url && {
+      label: "فيسبوك",
+      href: externalHref(settings.facebook_url),
+      external: true,
+    },
+    settings.instagram_url && {
+      label: "إنستجرام",
+      href: externalHref(settings.instagram_url),
+      external: true,
+    },
+  ].filter(Boolean) as { label: string; href: string; external: boolean }[];
 
   return (
     <footer className="bg-olive text-ivory relative overflow-hidden mt-20">
@@ -37,10 +70,23 @@ export default async function Footer() {
 
           <div>
             <h4 className="font-arabic font-bold text-ivory mb-4">تواصل معنا</h4>
-            <p className="text-ivory/70 font-arabic text-sm">فودافون كاش: {settings.vodafone_cash}</p>
-            <p className="text-ivory/70 font-arabic text-sm mt-1">إنستاباي: {settings.instapay_handle}</p>
-            {settings.contact_email && (
-              <p className="text-ivory/70 font-arabic text-sm mt-1">{settings.contact_email}</p>
+            {contacts.length > 0 ? (
+              <ul className="space-y-2 font-arabic text-ivory/70">
+                {contacts.map((item) => (
+                  <li key={item.label}>
+                    <a
+                      href={item.href}
+                      {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                      className="hover:text-mustard transition-colors"
+                      dir={item.label.match(/^\d/) ? "ltr" : undefined}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-ivory/50 font-arabic text-sm">أضف روابط التواصل من لوحة التحكم</p>
             )}
           </div>
         </div>

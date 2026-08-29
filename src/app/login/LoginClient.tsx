@@ -93,12 +93,6 @@ export default function LoginClient() {
             </div>
           )}
 
-          {searchParams.get("verified") === "1" && (
-            <div className="p-3 mb-5 bg-mustard/15 rounded text-mustard font-arabic text-sm text-center">
-              تم تأكيد حسابك — يمكنك تسجيل الدخول
-            </div>
-          )}
-
           <form onSubmit={mode === "login" ? handleLogin : handleRegister} className="space-y-4">
             {mode === "register" && (
               <div>

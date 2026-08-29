@@ -52,26 +52,53 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
       </section>
 
       <section className="card p-6 space-y-4">
-        <h2 className="font-arabic font-bold text-olive text-lg">معلومات التواصل</h2>
+        <h2 className="font-arabic font-bold text-olive text-lg">معلومات التواصل (التذييل)</h2>
+        <p className="font-arabic text-sm text-charcoal/50">
+          تظهر هذه الروابط في أسفل الموقع
+        </p>
         <div>
-          <label className="block font-arabic text-sm text-olive mb-1">الهاتف</label>
-          <input name="contact_phone" defaultValue={settings.contact_phone} className="input-field" />
+          <label className="block font-arabic text-sm text-olive mb-1">رقم الهاتف</label>
+          <input
+            name="contact_phone"
+            defaultValue={settings.contact_phone}
+            className="input-field"
+            placeholder="01012345678"
+            dir="ltr"
+          />
         </div>
         <div>
-          <label className="block font-arabic text-sm text-olive mb-1">البريد الإلكتروني</label>
+          <label className="block font-arabic text-sm text-olive mb-1">رابط واتساب</label>
+          <input
+            name="contact_whatsapp"
+            defaultValue={settings.contact_whatsapp}
+            className="input-field"
+            placeholder="https://wa.me/201012345678"
+            dir="ltr"
+          />
+        </div>
+        <div>
+          <label className="block font-arabic text-sm text-olive mb-1">رابط فيسبوك</label>
+          <input
+            name="facebook_url"
+            defaultValue={settings.facebook_url}
+            className="input-field"
+            placeholder="https://facebook.com/nasaq"
+            dir="ltr"
+          />
+        </div>
+        <div>
+          <label className="block font-arabic text-sm text-olive mb-1">رابط إنستجرام</label>
+          <input
+            name="instagram_url"
+            defaultValue={settings.instagram_url}
+            className="input-field"
+            placeholder="https://instagram.com/nasaq"
+            dir="ltr"
+          />
+        </div>
+        <div>
+          <label className="block font-arabic text-sm text-olive mb-1">البريد الإلكتروني (للعرض الداخلي)</label>
           <input name="contact_email" defaultValue={settings.contact_email} className="input-field" />
-        </div>
-        <div>
-          <label className="block font-arabic text-sm text-olive mb-1">واتساب</label>
-          <input name="contact_whatsapp" defaultValue={settings.contact_whatsapp} className="input-field" />
-        </div>
-        <div>
-          <label className="block font-arabic text-sm text-olive mb-1">فيسبوك</label>
-          <input name="facebook_url" defaultValue={settings.facebook_url} className="input-field" />
-        </div>
-        <div>
-          <label className="block font-arabic text-sm text-olive mb-1">إنستجرام</label>
-          <input name="instagram_url" defaultValue={settings.instagram_url} className="input-field" />
         </div>
       </section>
 
