@@ -4,6 +4,8 @@ import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
 import Providers from "@/components/Providers";
 import SiteChrome from "@/components/SiteChrome";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -47,7 +49,9 @@ export default function RootLayout({
       >
         <Providers>
           <CartProvider>
-            <SiteChrome>{children}</SiteChrome>
+            <SiteChrome navbar={<Navbar />} footer={<Footer />}>
+              {children}
+            </SiteChrome>
           </CartProvider>
         </Providers>
       </body>

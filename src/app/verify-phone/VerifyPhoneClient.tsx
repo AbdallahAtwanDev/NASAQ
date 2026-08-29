@@ -13,6 +13,7 @@ export default function VerifyPhoneClient() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resent, setResent] = useState(false);
+  const [devCode, setDevCode] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +37,13 @@ export default function VerifyPhoneClient() {
   async function handleResend() {
     if (!email) return;
     setResent(false);
-    await resendVerificationAction(email);
+    setDevCode("");
+    const result = await resendVerificationAction(email);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    if (result.devPhoneCode) setDevCode(result.devPhoneCode);
     setResent(true);
   }
 
@@ -62,6 +69,11 @@ export default function VerifyPhoneClient() {
         {resent && (
           <div className="p-3 mb-4 bg-mustard/15 rounded text-mustard font-arabic text-sm text-center">
             تم إرسال كود جديد
+            {devCode && (
+              <p className="mt-2 text-olive font-mono text-xl tracking-widest" dir="ltr">
+                {devCode}
+              </p>
+            )}
           </div>
         )}
 

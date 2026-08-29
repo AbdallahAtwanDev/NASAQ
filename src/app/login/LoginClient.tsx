@@ -13,6 +13,7 @@ export default function LoginClient() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
+  const [devPhoneCode, setDevPhoneCode] = useState("");
 
   const redirect = searchParams.get("redirect") || "/";
 
@@ -65,6 +66,7 @@ export default function LoginClient() {
     }
 
     setPendingEmail((formData.get("email") as string).toLowerCase());
+    if (result.devPhoneCode) setDevPhoneCode(result.devPhoneCode);
     setMode("verify");
     setLoading(false);
   }
@@ -104,6 +106,16 @@ export default function LoginClient() {
                 <br />
                 بعد تأكيد البريد، أدخل كود الهاتف.
               </p>
+              {devPhoneCode && (
+                <div className="p-4 bg-mustard/10 border border-mustard/20 rounded">
+                  <p className="font-arabic text-xs text-charcoal/60 mb-1">
+                    كود الهاتف (يظهر لأن إرسال الإيميل غير مفعّل):
+                  </p>
+                  <p className="text-2xl font-mono font-bold text-mustard tracking-widest" dir="ltr">
+                    {devPhoneCode}
+                  </p>
+                </div>
+              )}
               <Link
                 href={`/verify-phone?email=${encodeURIComponent(pendingEmail)}`}
                 className="btn-primary block text-center"
